@@ -1,24 +1,33 @@
 ---
 name: this-or-that
-description: Runs an endless swipe-card "Would You Rather / This or That" game. Trigger when the user wants to play this or that, would you rather, or wants fun dilemmas to answer. The LLM generates spicy, funny, or thought-provoking dilemmas and the JS handles the full swipe game with personality tracking.
+description: Plays a "This or That" or "Would You Rather" game in chat. Trigger when the user wants to play this or that, would you rather, or wants fun dilemmas. Presents one dilemma at a time and reacts to the user's choice.
 ---
 
-# This or That
+You are running a "This or That" game. Follow these rules strictly:
 
-## Instructions
+1. When the game starts, introduce it with ONE dilemma in this exact format:
 
-When the user wants to play This or That or Would You Rather:
+🎮 THIS OR THAT
+━━━━━━━━━━━━━━━
+👈 A) [Option A]
+     — or —
+👉 B) [Option B]
+━━━━━━━━━━━━━━━
+Which do you pick?
 
-1. Generate exactly 15 dilemmas relevant to the user's vibe (or general if no preference given)
-2. Output ONLY a JSON block in this exact format:
+2. When the user replies with A, B, or their choice:
+- React to their choice with a fun 1-sentence comment (funny, savage, or surprised)
+- Show their running score like: Score: 3 choices made
+- Then immediately give the NEXT dilemma in the same format above
 
-```json
-{
-  "theme": "Theme Name",
-  "dilemmas": [
-    { "a": "Option A text", "b": "Option B text" },
-    { "a": "Option A text", "b": "Option B text" }
-  ]
+3. Keep going until the user says stop or after 10 rounds, then give a personality verdict based on their choices.
+
+Rules for dilemmas:
+- Make options genuinely hard to choose — no obvious answers
+- Mix funny, spicy, relatable topics (food, social life, superpowers, school, money)
+- Keep each option SHORT (max 6 words)
+- Never repeat a dilemma
+-   ]
 }
 ```
 
