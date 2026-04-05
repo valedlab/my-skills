@@ -1,455 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tier List</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --s:  #FF3B3B;
-    --a:  #FF8C00;
-    --b:  #FFD700;
-    --c:  #4CAF50;
-    --d:  #2196F3;
-    --f:  #9C27B0;
-    --bg: #0d0d0f;
-    --surface: #18181c;
-    --border: #2a2a30;
-    --text: #f0f0f0;
-    --muted: #666;
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 20px 16px 40px;
-    background-image: radial-gradient(ellipse at 20% 0%, #1a0a2e 0%, transparent 50%),
-                      radial-gradient(ellipse at 80% 100%, #0a1a2e 0%, transparent 50%);
-  }
-
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(2rem, 8vw, 3.5rem);
-    letter-spacing: 0.05em;
-    text-align: center;
-    margin-bottom: 6px;
-    background: linear-gradient(135deg, #fff 30%, #aaa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  .subtitle {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-bottom: 24px;
-  }
-
-  .tiers {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 16px;
-  }
-
-  .tier-row {
-    display: flex;
-    align-items: stretch;
-    min-height: 72px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    transition: border-color 0.2s;
-  }
-
-  .tier-row.drag-over {
-    border-color: #fff4;
-    box-shadow: 0 0 0 2px #fff2;
-  }
-
-  .tier-label {
-    width: 56px;
-    min-width: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    letter-spacing: 0.05em;
-    color: #000;
-    font-weight: 900;
-    flex-shrink: 0;
-  }
-
-  .tier-s .tier-label { background: var(--s); }
-  .tier-a .tier-label { background: var(--a); }
-  .tier-b .tier-label { background: var(--b); color: #222; }
-  .tier-c .tier-label { background: var(--c); }
-  .tier-d .tier-label { background: var(--d); }
-  .tier-f .tier-label { background: var(--f); }
-
-  .tier-items {
-    flex: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px;
-    background: var(--surface);
-    min-height: 72px;
-  }
-
-  .item-card {
-    background: #26262e;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: grab;
-    user-select: none;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-    white-space: nowrap;
-    touch-action: none;
-  }
-
-  .item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #0008;
-    border-color: #444;
-  }
-
-  .item-card.dragging {
-    opacity: 0.4;
-    cursor: grabbing;
-  }
-
-  .item-card.touch-dragging {
-    position: fixed;
-    z-index: 9999;
-    opacity: 0.9;
-    pointer-events: none;
-    transform: rotate(3deg) scale(1.05);
-    box-shadow: 0 12px 40px #000a;
-  }
-
-  .unranked-section {
-    margin-top: 20px;
-  }
-
-  .unranked-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .unranked-pool {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 14px;
-    background: var(--surface);
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    min-height: 80px;
-    align-items: flex-start;
-    align-content: flex-start;
-  }
-
-  .unranked-pool.drag-over {
-    border-color: #555;
-    background: #1e1e26;
-  }
-
-  .actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  button {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 10px 22px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    background: var(--surface);
-    color: var(--text);
-    letter-spacing: 0.03em;
-  }
-
-  button:hover { background: #2a2a35; border-color: #555; }
-
-  button.primary {
-    background: linear-gradient(135deg, #ff3b3b, #ff6b00);
-    border: none;
-    color: #fff;
-  }
-
-  button.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #222;
-    border: 1px solid #444;
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 100px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 9999;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  .empty-hint {
-    color: var(--muted);
-    font-size: 0.78rem;
-    font-style: italic;
-    align-self: center;
-  }
-</style>
-</head>
+<html>
+<head><meta charset="UTF-8"></head>
 <body>
-
-<h1 id="title">TIER LIST</h1>
-<p class="subtitle">Drag items into your tiers • Long-press on mobile</p>
-
-<div class="tiers" id="tiers">
-  <div class="tier-row tier-s" data-tier="S">
-    <div class="tier-label">S</div>
-    <div class="tier-items" id="tier-S"></div>
-  </div>
-  <div class="tier-row tier-a" data-tier="A">
-    <div class="tier-label">A</div>
-    <div class="tier-items" id="tier-A"></div>
-  </div>
-  <div class="tier-row tier-b" data-tier="B">
-    <div class="tier-label">B</div>
-    <div class="tier-items" id="tier-B"></div>
-  </div>
-  <div class="tier-row tier-c" data-tier="C">
-    <div class="tier-label">C</div>
-    <div class="tier-items" id="tier-C"></div>
-  </div>
-  <div class="tier-row tier-d" data-tier="D">
-    <div class="tier-label">D</div>
-    <div class="tier-items" id="tier-D"></div>
-  </div>
-  <div class="tier-row tier-f" data-tier="F">
-    <div class="tier-label">F</div>
-    <div class="tier-items" id="tier-F"></div>
-  </div>
-</div>
-
-<div class="unranked-section">
-  <div class="unranked-label">Unranked — drag to a tier</div>
-  <div class="unranked-pool" id="unranked"></div>
-</div>
-
-<div class="actions">
-  <button onclick="resetAll()">↺ Reset</button>
-  <button class="primary" onclick="copyResults()">📋 Copy Results</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script>
-  let draggedEl = null;
+window.ai_edge_gallery_get_result = async function(llmOutput) {
+  try {
+    const match = llmOutput.match(/\{[\s\S]*\}/);
+    if (!match) return "❌ Could not parse tier list data.";
+    const data = JSON.parse(match[0]);
 
-  // ── Parse LLM output ──────────────────────────────────────────
-  function parseInput(raw) {
-    try {
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error('No JSON');
-      return JSON.parse(match[0]);
-    } catch {
-      return null;
-    }
-  }
-
-  function init(data) {
-    document.getElementById('title').textContent =
-      (data.topic || 'TIER LIST').toUpperCase();
-
-    const pool = document.getElementById('unranked');
-    pool.innerHTML = '';
-
-    data.items.forEach(name => {
-      pool.appendChild(createCard(name));
-    });
-  }
-
-  // ── Card factory ──────────────────────────────────────────────
-  function createCard(text) {
-    const card = document.createElement('div');
-    card.className = 'item-card';
-    card.textContent = text;
-    card.draggable = true;
-    setupDragEvents(card);
-    setupTouchEvents(card);
-    return card;
-  }
-
-  // ── Desktop drag & drop ───────────────────────────────────────
-  function setupDragEvents(card) {
-    card.addEventListener('dragstart', e => {
-      draggedEl = card;
-      setTimeout(() => card.classList.add('dragging'), 0);
-      e.dataTransfer.effectAllowed = 'move';
-    });
-    card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
-      draggedEl = null;
-    });
-  }
-
-  document.querySelectorAll('.tier-items, .unranked-pool').forEach(zone => {
-    zone.addEventListener('dragover', e => {
-      e.preventDefault();
-      zone.classList.add('drag-over');
-    });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      if (draggedEl) zone.appendChild(draggedEl);
-    });
-  });
-
-  // ── Touch drag & drop ─────────────────────────────────────────
-  function setupTouchEvents(card) {
-    let clone = null;
-    let originZone = null;
-
-    card.addEventListener('touchstart', e => {
-      originZone = card.parentElement;
-      const touch = e.touches[0];
-      const rect = card.getBoundingClientRect();
-
-      clone = card.cloneNode(true);
-      clone.classList.add('touch-dragging');
-      clone.style.width = rect.width + 'px';
-      clone.style.left = (touch.clientX - rect.width / 2) + 'px';
-      clone.style.top  = (touch.clientY - rect.height / 2) + 'px';
-      document.body.appendChild(clone);
-      card.classList.add('dragging');
-    }, { passive: true });
-
-    card.addEventListener('touchmove', e => {
-      if (!clone) return;
-      e.preventDefault();
-      const touch = e.touches[0];
-      const w = clone.offsetWidth;
-      const h = clone.offsetHeight;
-      clone.style.left = (touch.clientX - w / 2) + 'px';
-      clone.style.top  = (touch.clientY - h / 2) + 'px';
-
-      // highlight target
-      clone.style.display = 'none';
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      clone.style.display = '';
-
-      document.querySelectorAll('.tier-items, .unranked-pool')
-        .forEach(z => z.classList.remove('drag-over'));
-      const zone = el && el.closest('.tier-items, .unranked-pool');
-      if (zone) zone.classList.add('drag-over');
-    }, { passive: false });
-
-    card.addEventListener('touchend', e => {
-      if (!clone) return;
-      const touch = e.changedTouches[0];
-
-      clone.style.display = 'none';
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      clone.style.display = '';
-
-      const zone = el && el.closest('.tier-items, .unranked-pool');
-      if (zone) zone.appendChild(card);
-
-      document.querySelectorAll('.tier-items, .unranked-pool')
-        .forEach(z => z.classList.remove('drag-over'));
-
-      clone.remove();
-      clone = null;
-      card.classList.remove('dragging');
-    });
-  }
-
-  // ── Actions ───────────────────────────────────────────────────
-  function resetAll() {
-    const pool = document.getElementById('unranked');
-    document.querySelectorAll('.tier-items').forEach(zone => {
-      [...zone.querySelectorAll('.item-card')].forEach(c => pool.appendChild(c));
-    });
-    showToast('Reset! Start over 🔄');
-  }
-
-  function copyResults() {
-    const tiers = ['S','A','B','C','D','F'];
-    let out = `🏆 ${document.getElementById('title').textContent} TIER LIST\n\n`;
-    tiers.forEach(t => {
-      const items = [...document.querySelectorAll(`#tier-${t} .item-card`)]
-        .map(c => c.textContent);
-      if (items.length) out += `${t}: ${items.join(', ')}\n`;
-    });
-    const unranked = [...document.querySelectorAll('#unranked .item-card')]
-      .map(c => c.textContent);
-    if (unranked.length) out += `\nUnranked: ${unranked.join(', ')}`;
-
-    navigator.clipboard.writeText(out).then(() => showToast('Copied! 📋'));
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
-  }
-
-  // ── Entry point called by the app ─────────────────────────────
-  window.ai_edge_gallery_get_result = async function(llmOutput) {
-    const data = parseInput(llmOutput);
-    if (!data) {
-      document.getElementById('unranked').innerHTML =
-        '<span class="empty-hint">Could not parse items. Try again.</span>';
-      return 'error: could not parse JSON';
-    }
-    init(data);
-    return 'Tier list rendered for: ' + data.topic;
-  };
-
-  // ── Demo fallback (runs when opened directly in browser) ──────
-  (function demo() {
-    const sample = {
-      topic: "Marvel Movies",
-      items: [
-        "Avengers Endgame","Iron Man","The Dark Knight","Spider-Man NWH",
-        "Thor Ragnarok","Black Panther","Infinity War","Doctor Strange",
-        "Guardians Vol 2","Captain America CW","Ant-Man","Thor 2",
-        "Iron Man 3","Black Widow","Eternals"
-      ]
+    const tierConfig = {
+      S: { emoji: "👑", bar: "██████████" },
+      A: { emoji: "🔥", bar: "████████░░" },
+      B: { emoji: "✅", bar: "██████░░░░" },
+      C: { emoji: "😐", bar: "████░░░░░░" },
+      D: { emoji: "👎", bar: "██░░░░░░░░" },
+      F: { emoji: "💀", bar: "░░░░░░░░░░" },
     };
-    init(sample);
-  })();
+
+    // Group items by tier
+    const tiers = { S: [], A: [], B: [], C: [], D: [], F: [] };
+    data.items.forEach(item => {
+      if (tiers[item.tier]) tiers[item.tier].push(item.name);
+    });
+
+    let output = `🏆 ${data.topic.toUpperCase()} TIER LIST\n`;
+    output += "━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+    for (const [tier, cfg] of Object.entries(tierConfig)) {
+      const items = tiers[tier];
+      if (items.length === 0) continue;
+      output += `${cfg.emoji} ${tier}-TIER\n`;
+      output += `${cfg.bar}\n`;
+      items.forEach(item => {
+        output += `  • ${item}\n`;
+      });
+      output += "\n";
+    }
+
+    output += "━━━━━━━━━━━━━━━━━━━━━━\n";
+    output += "💬 Disagree? Tell me what to change!";
+
+    return output;
+
+  } catch (e) {
+    return "❌ Error building tier list: " + e.message;
+  }
+};
 </script>
 </body>
 </html>
-w
