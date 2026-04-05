@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>This or That</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Syne+Mono&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f0e8;
+    --ink: #111;
+    --a-color: #ff2d55;
+    --b-color: #007aff;
+    --card-bg: #fff;
+    --border: #e0d8cc;
+  }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 16px 40px;
+    overflow-x: hidden;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 7vw, 2.6rem);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .logo span:first-child { color: var(--a-color); }
+  .logo .or { color: #888; font-size: 0.6em; margin: 0 8px; }
+  .logo span:last-child { color: var(--b-color); }
+
+  .progress-bar {
+    width: min(360px, 100%);
+    height: 4px;
+    background: var(--border);
+    border-radius: 100px;
+    margin: 12px auto 0;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--a-color), var(--b-color));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* ── Card stack ── */
+  .stack {
+    position: relative;
+    width: min(340px, 100%);
+    height: 420px;
+    margin: 0 auto;
+  }
+
+  .card {
+    position: absolute;
+    inset: 0;
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 22px;
+    touch-action: none;
+    cursor: grab;
+    transition: box-shadow 0.2s;
+    box-shadow: 0 4px 24px #0000000d;
+    will-change: transform;
+    user-select: none;
+  }
+
+  .card:active { cursor: grabbing; }
+
+  .card-number {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    font-family: 'Syne Mono', monospace;
+    font-size: 0.72rem;
+    color: #bbb;
+  }
+
+  .vs-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #ccc;
+    margin: 16px 0;
+  }
+
+  .option {
+    width: 100%;
+    padding: 18px 16px;
+    border-radius: 14px;
+    text-align: center;
+    font-weight: 800;
+    font-size: clamp(0.9rem, 4vw, 1.05rem);
+    line-height: 1.3;
+    transition: transform 0.15s, background 0.15s;
+  }
+
+  .option-a {
+    background: #fff0f3;
+    color: var(--a-color);
+    border: 1.5px solid #ffd0d8;
+  }
+
+  .option-b {
+    background: #f0f5ff;
+    color: var(--b-color);
+    border: 1.5px solid #c8daff;
+  }
+
+  /* Swipe direction overlays */
+  .vote-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+  }
+
+  .vote-a { background: #ff2d5522; color: var(--a-color); }
+  .vote-b { background: #007aff22; color: var(--b-color); }
+
+  /* Behind cards — peek effect */
+  .card.behind-1 {
+    transform: scale(0.96) translateY(8px);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .card.behind-2 {
+    transform: scale(0.92) translateY(16px);
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ── Tap buttons ── */
+  .tap-btns {
+    display: flex;
+    gap: 12px;
+    width: min(340px, 100%);
+    margin: 16px auto 0;
+  }
+
+  .tap-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.12s, filter 0.12s;
+    color: #fff;
+  }
+
+  .tap-btn:active { transform: scale(0.96); }
+
+  .btn-a { background: var(--a-color); }
+  .btn-b { background: var(--b-color); }
+
+  /* ── Results screen ── */
+  #results {
+    display: none;
+    width: min(380px, 100%);
+    margin: 0 auto;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-header {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .personality-badge {
+    text-align: center;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 10px 24px;
+    border-radius: 100px;
+    display: inline-block;
+    margin: 0 auto 20px;
+  }
+
+  .result-wrap { text-align: center; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-box {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+  }
+
+  .stat-box .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    display: block;
+  }
+
+  .stat-box .stat-label {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat-a .stat-num { color: var(--a-color); }
+  .stat-b .stat-num { color: var(--b-color); }
+
+  .choices-list {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .choice-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+
+  .choice-row:last-child { border-bottom: none; }
+
+  .choice-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-a { background: var(--a-color); }
+  .dot-b { background: var(--b-color); }
+
+  .choice-q { color: #888; flex: 1; }
+  .choice-ans { font-weight: 700; }
+
+  .play-again-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 14px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .play-again-btn:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>THIS</span><span class="or">OR</span><span>THAT</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress"></div>
+  </div>
+</header>
+
+<!-- Game -->
+<div id="game">
+  <div class="stack" id="stack"></div>
+  <div class="tap-btns">
+    <button class="tap-btn btn-a" id="btnA">← This</button>
+    <button class="tap-btn btn-b" id="btnB">That →</button>
+  </div>
+</div>
+
+<!-- Results -->
+<div id="results">
+  <div class="result-wrap">
+    <div class="result-header">Your Vibe 🔮</div>
+    <div class="personality-badge" id="personalityBadge">Loading...</div>
+    <div class="stats-grid">
+      <div class="stat-box stat-a">
+        <span class="stat-num" id="countA">0</span>
+        <span class="stat-label">← This</span>
+      </div>
+      <div class="stat-box stat-b">
+        <span class="stat-num" id="countB">0</span>
+        <span class="stat-label">That →</span>
+      </div>
+    </div>
+    <div class="choices-list" id="choicesList"></div>
+    <button class="play-again-btn" onclick="restart()">Play Again 🔁</button>
+  </div>
+</div>
+
+<script>
+  let dilemmas = [];
+  let currentIndex = 0;
+  let choices = [];
+  let isDragging = false;
+  let startX = 0;
+  let currentX = 0;
+
+  // ── Parse ──────────────────────────────────────────────────
+  function parseInput(raw) {
+    try {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error();
+      return JSON.parse(match[0]);
+    } catch { return null; }
+  }
+
+  function init(data) {
+    dilemmas = data.dilemmas || [];
+    currentIndex = 0;
+    choices = [];
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    buildStack();
+    updateProgress();
+    updateBtnLabels();
+  }
+
+  function buildStack() {
+    const stack = document.getElementById('stack');
+    stack.innerHTML = '';
+    const visible = dilemmas.slice(currentIndex, currentIndex + 3);
+    visible.forEach((d, i) => {
+      const card = makeCard(d, currentIndex + i);
+      if (i === 0) {
+        card.style.zIndex = 10;
+        setupCardInteraction(card);
+      } else if (i === 1) {
+        card.classList.add('behind-1');
+      } else {
+        card.classList.add('behind-2');
+      }
+      stack.appendChild(card);
+    });
+  }
+
+  function makeCard(d, idx) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.idx = idx;
+    card.innerHTML = `
+      <div class="card-number">${idx + 1} / ${dilemmas.length}</div>
+      <div class="option option-a">${d.a}</div>
+      <div class="vs-label">— or —</div>
+      <div class="option option-b">${d.b}</div>
+      <div class="vote-overlay vote-a" id="overlayA-${idx}">← THIS</div>
+      <div class="vote-overlay vote-b" id="overlayB-${idx}">THAT →</div>
+    `;
+    return card;
+  }
+
+  function updateBtnLabels() {
+    if (currentIndex >= dilemmas.length) return;
+    const d = dilemmas[currentIndex];
+    document.getElementById('btnA').textContent = '← ' + d.a.split(' ').slice(0,3).join(' ');
+    document.getElementById('btnB').textContent = d.b.split(' ').slice(0,3).join(' ') + ' →';
+  }
+
+  // ── Interaction ────────────────────────────────────────────
+  function setupCardInteraction(card) {
+    const idx = parseInt(card.dataset.idx);
+
+    // Mouse
+    card.addEventListener('mousedown', e => {
+      isDragging = true;
+      startX = e.clientX;
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      currentX = e.clientX - startX;
+      applyDrag(card, currentX, idx);
+    });
+    window.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const threshold = 80;
+      if (currentX < -threshold) vote(card, 'a');
+      else if (currentX > threshold) vote(card, 'b');
+      else resetCard(card);
+      currentX = 0;
+    });
+
+    // Touch
+    card.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    }, { passive: true });
+    card.addEventListener('touchmove', e => {
+      currentX = e.touches[0].clientX - startX;
+      applyDrag(card, currentX, idx);
+    }, { passive: true });
+    card.addEventListener('touchend', () => {
+      const threshold = 60;
+      if (currentX < -threshold) vote(card, 'a');
+      else if (currentX > threshold) vote(card, 'b');
+      else resetCard(card);
+      currentX = 0;
+    });
+  }
+
+  function applyDrag(card, dx, idx) {
+    const rotate = dx * 0.08;
+    card.style.transform = `translateX(${dx}px) rotate(${rotate}deg)`;
+    const oa = document.getElementById(`overlayA-${idx}`);
+    const ob = document.getElementById(`overlayB-${idx}`);
+    if (oa && ob) {
+      oa.style.opacity = dx < 0 ? Math.min(1, Math.abs(dx) / 80) : 0;
+      ob.style.opacity = dx > 0 ? Math.min(1, dx / 80) : 0;
+    }
+  }
+
+  function resetCard(card) {
+    card.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+    card.style.transform = '';
+    setTimeout(() => card.style.transition = '', 400);
+  }
+
+  function vote(card, pick) {
+    const direction = pick === 'a' ? -1 : 1;
+    card.style.transition = 'transform 0.35s ease, opacity 0.35s ease';
+    card.style.transform = `translateX(${direction * 500}px) rotate(${direction * 20}deg)`;
+    card.style.opacity = '0';
+    choices.push({ dilemma: dilemmas[currentIndex], pick });
+    currentIndex++;
+    updateProgress();
+    setTimeout(() => {
+      if (currentIndex >= dilemmas.length) showResults();
+      else buildStack(), updateBtnLabels();
+    }, 350);
+  }
+
+  function updateProgress() {
+    const pct = dilemmas.length ? (currentIndex / dilemmas.length) * 100 : 0;
+    document.getElementById('progress').style.width = pct + '%';
+  }
+
+  // Tap buttons
+  document.getElementById('btnA').addEventListener('click', () => {
+    const card = document.querySelector('.stack .card:not(.behind-1):not(.behind-2)');
+    if (card) vote(card, 'a');
+  });
+  document.getElementById('btnB').addEventListener('click', () => {
+    const card = document.querySelector('.stack .card:not(.behind-1):not(.behind-2)');
+    if (card) vote(card, 'b');
+  });
+
+  // ── Results ────────────────────────────────────────────────
+  function showResults() {
+    document.getElementById('game').style.display = 'none';
+    const res = document.getElementById('results');
+    res.style.display = 'block';
+
+    const countA = choices.filter(c => c.pick === 'a').length;
+    const countB = choices.filter(c => c.pick === 'b').length;
+    document.getElementById('countA').textContent = countA;
+    document.getElementById('countB').textContent = countB;
+
+    // Personality
+    const ratio = countA / choices.length;
+    let badge;
+    if (ratio > 0.75)      badge = '🔥 Chaotic Energy';
+    else if (ratio > 0.55) badge = '😈 Bold AF';
+    else if (ratio < 0.25) badge = '🧊 Ice Cold';
+    else if (ratio < 0.45) badge = '🤝 Safe Player';
+    else                   badge = '⚖️ True Neutral';
+    document.getElementById('personalityBadge').textContent = badge;
+
+    // Choices list
+    const list = document.getElementById('choicesList');
+    list.innerHTML = choices.map(c => `
+      <div class="choice-row">
+        <div class="choice-dot ${c.pick === 'a' ? 'dot-a' : 'dot-b'}"></div>
+        <span class="choice-q">${c.dilemma.a} vs ${c.dilemma.b}</span>
+        <span class="choice-ans">${c.pick === 'a' ? c.dilemma.a : c.dilemma.b}</span>
+      </div>
+    `).join('');
+  }
+
+  function restart() {
+    init({ dilemmas });
+  }
+
+  // ── Entry point ────────────────────────────────────────────
+  window.ai_edge_gallery_get_result = async function(llmOutput) {
+    const data = parseInput(llmOutput);
+    if (!data || !data.dilemmas) return 'error: could not parse JSON';
+    init(data);
+    return 'Game started with ' + data.dilemmas.length + ' dilemmas';
+  };
+
+  // ── Demo fallback ──────────────────────────────────────────
+  init({
+    theme: "Life Choices",
+    dilemmas: [
+      { a: "Be famous but broke", b: "Be rich but unknown" },
+      { a: "No sleep for a week", b: "No food for 3 days" },
+      { a: "Know when you'll die", b: "Know how you'll die" },
+      { a: "Fly but only 1 foot high", b: "Teleport but always dizzy" },
+      { a: "Always be 10 mins late", b: "Always be 30 mins early" },
+      { a: "Reread the same book forever", b: "Rewatch the same movie forever" },
+      { a: "Talk in rhymes always", b: "Sing everything you say" },
+      { a: "Every DM gets read receipts", b: "Your search history is public" },
+      { a: "Free food for life", b: "Free travel for life" },
+      { a: "Be the funniest person alive", b: "Be the most attractive person alive" },
+      { a: "Skip school forever", b: "Skip sleep forever" },
+      { a: "Know all languages", b: "Play every instrument" },
+      { a: "Live in summer always", b: "Live in winter always" },
+      { a: "Have 1 true friend", b: "Have 100 casual friends" },
+      { a: "Undo your last text", b: "Undo your last purchase" }
+    ]
+  });
+</script>
+</body>
+</html>
+a
