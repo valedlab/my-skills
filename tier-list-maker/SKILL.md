@@ -1,20 +1,20 @@
 ---
 name: tier-list-maker
-description: Creates an interactive drag-and-drop tier list for any category the user mentions. Trigger when the user wants to rank, rate, or tier anything — anime, snacks, movies, games, people, songs, school subjects, etc. The LLM generates the items and the JS renders a full drag-and-drop tier list (S through F tiers) that the user can customize.
+description: Creates a tier list for any category the user mentions. Trigger when the user wants to rank, rate, or tier anything — anime, snacks, movies, games, coding languages, school subjects, etc.
 ---
 
-# Tier List Maker
+You MUST respond with ONLY a raw JSON object. No explanation, no markdown, no backticks, nothing else.
 
-You MUST respond with ONLY a raw JSON object. No explanation, no markdown, no code fences, no extra text — just the JSON object itself.
-
-Generate 12–18 items for the topic the user requested.
+Generate 12-15 items and assign each a tier (S, A, B, C, D, or F) based on general popular opinion. Make it debatable and fun.
 
 Respond with exactly this structure:
-
-{"topic":"Category Name","items":["Item 1","Item 2","Item 3","Item 4","Item 5","Item 6","Item 7","Item 8","Item 9","Item 10","Item 11","Item 12"]}
+{"topic":"Category Name","items":[{"name":"Item 1","tier":"S"},{"name":"Item 2","tier":"A"},{"name":"Item 3","tier":"B"}]}
 
 Rules:
-- Output ONLY the raw JSON. No backticks. No "here is your list". Nothing else.
+- Output ONLY the raw JSON. No backticks. No extra text. Nothing else.
+- At least 1-2 items per tier
+- Keep names short (1-4 words)
+- Make controversial placements to spark debate
 - Items must be short (1–4 words)
 - Pick well-known, debatable items that spark opinions
 - Mix obvious picks with controversial ones
