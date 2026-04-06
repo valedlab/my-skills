@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<script>
+    window['ai_edge_gallery_get_result'] = async (data) => {
+        try {
+            const payload = typeof data === "string" ? JSON.parse(data) : data;
+            const action = payload.action;
+
+            let result = "";
+            let image = null;
+
+            switch (action) {
+                case "shorten":
+                    const longUrl = encodeURIComponent(payload.url);
+                    const shortRes = await fetch(`https://is.gd/create.php?format=json&url=${longUrl}`);
+                    const shortData = await shortRes.json();
+                    result = `✅ Shortened URL:\n${shortData.shorturl}`;
+                    break;
+
+                case "qr":
+                case "shorten-qr":
+                    const text = payload.text || payload.url;
+                    if (action === "shorten-qr") {
+                        const sRes = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(text)}`);
+                        const sData = await sRes.json();
+                        result = `✅ Short URL: ${sData.shorturl}\nQR Code below:`;
+                    } else {
+                        result = `✅ QR Code for: ${text}`;
+                    }
+                    image = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(text)}`;
+                    break;
+
+                default:
+                    result = "Use actions: shorten, qr, or shorten-qr";
+            }
+
+            return JSON.stringify({
+                result: result,
+                image: image
+            });
+
+        } catch (e) {
+            return JSON.stringify({ error: "Error: " + e.message });
+        }
+    };
+</script>
+</body>
+</html>
