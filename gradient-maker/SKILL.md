@@ -1,23 +1,20 @@
 ---
 name: gradient-maker
-description: Generates beautiful gradient images based on color specifications and style preferences.
+description: Generate gradient images with custom colors and directions.
 ---
 
-# Gradient Image Generator
-
-## Overview
-This skill creates stunning gradient images that can be used as backgrounds, wallpapers, or design elements.
+# Gradient Generator
 
 ## Instructions
+Call `run_js` with:
+- script name: index.html  
+- data: JSON string with optional fields:
+  - colors: array of hex colors (default: ["#667eea","#764ba2"])
+  - direction: "horizontal","vertical","diagonal","radial"(default:"diagonal")
+  - width: number (default: 400)
+  - height: number (default: 300)
 
-When the user wants to create a gradient image, call the `run_js` tool with the following parameters:
-
-- **script name**: index.html
-- **data**: A JSON string containing these fields:
-  - `colors`: Array of strings. Hex colors or CSS color names (e.g., ["#ff6b6b", "#4ecdc4"] or ["red", "blue", "green"]). Default: ["#667eea", "#764ba2"]
-  - `direction`: String. Gradient direction: "horizontal", "vertical", "diagonal", "radial", or "conic". Default: "diagonal"
-  - `width`: Number. Image width in pixels. Default: 800
-  - `height`: Number. Image height in pixels. Default: 600
+Example: {"colors":["#ff6b6b","#4ecdc4"],"direction":"diagonal"}  - `height`: Number. Image height in pixels. Default: 600
   - `style`: String. Additional style: "solid" (linear), "blur" (soft blend), "noise" (textured). Default: "solid"
 
 ### Example User Requests:
